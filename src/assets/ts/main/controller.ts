@@ -316,7 +316,7 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
                   mainDataServer.conversation.updateConversations();
               });
               RongIMLib.RongUploadLib.init(
-                {domain:IMGDOMAIN,drop_element:'',container:'functionBox',browse_button:'myPortrait' },
+                // {domain:IMGDOMAIN,drop_element:'',container:'functionBox',browse_button:'myPortrait' },
                 {domain:IMGDOMAIN,drop_element:'',container:'MessageForm',browse_button:'upload-image'},
                 {domain:FILEDOMAIN,drop_element:'chatMain',container:'MessageForm',browse_button:'upload-file'}
               );
