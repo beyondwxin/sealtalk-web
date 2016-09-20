@@ -23,7 +23,7 @@ declare module RongIMLib {
         static onprogress(): void
     }
     class RongUploadLib {
-        static init(imgOpts?: any, fileOpts?: any): void
+        static init(img1Opts?: any, img2Opts?: any, fileOpts?: any): void
         static getInstance(): RongUploadLib;
         reload(image: string, file: string): void
         setListeners(listener: any): void

@@ -106,7 +106,8 @@ groupAddMember.controller("groupaddmemberController", ["$scope", "$state", "$sta
 
             }
             $scope.back = function() {
-                $state.go("main.creategroup")
+                // $state.go("main.creategroup")
+                window.history.back();
             }
             $scope.syncState = function (id: string, state: boolean) {
               rawFriendList.forEach(function (item: any) {

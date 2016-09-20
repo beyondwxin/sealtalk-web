@@ -5,10 +5,10 @@
 var webimApp = angular.module("webim", ["ui.router", "ui.event", "uiSwitch", "ng.shims.placeholder",
     "webim.main.directive", "webim.main.controller", "webim.main.server",
     "webim.conversation.controller", "webim.conversation.directive",
-    "webim.addfirend", "webim.friendinfo", "webim.editfriendinfo",
+    "webim.addfirend", "webim.friendinfo", 
     "webim.creategroup", "webim.addgroup", "webim.groupaddmember", "webim.goupinfo",
     "webim.userinfo", "webim.blacklist", "webim.notification", "webim.usermodifypassword",
-    "webim.account", "webim.creatediscussion", "webim.discussionaddmember", "webim.discussioninfo"], function() {
+    "webim.account", "webim.groupdelmember"], function() {
     });
 
 webimApp.config(["$provide", "$stateProvider", "$urlRouterProvider", "$httpProvider",
@@ -87,6 +87,11 @@ webimApp.config(["$provide", "$stateProvider", "$urlRouterProvider", "$httpProvi
                     $state.go("main");
                     return;
                 }
+            }]).when("/main/groupdelmember/:idorname", ["$state", "mainDataServer", function($state: angular.ui.IStateService, mainDataServer: mainDataServer) {
+                if (!mainDataServer.loginUser.nickName) {
+                    $state.go("main");
+                    return;
+                }
             }]).when("/main/discussioninfo/:discussionid/:conversationtype", ["$state", "$match", "mainDataServer", function($state: angular.ui.IStateService, $match: any, mainDataServer: mainDataServer) {
                 if (!mainDataServer.loginUser.nickName) {
                     $state.go("main");
@@ -143,6 +148,10 @@ webimApp.config(["$provide", "$stateProvider", "$urlRouterProvider", "$httpProvi
             url: "/groupaddmember/:iscreate/:idorname",
             templateUrl: "assets/views/groupaddmember.html",
             controller: "groupaddmemberController"
+        }).state("main.groupdelmember", {
+            url: "/groupdelmember/:idorname",
+            templateUrl: "assets/views/groupdelmember.html",
+            controller: "groupdelmemberController"
         }).state("main.groupinfo", {
             url: "/groupinfo/:groupid/:conversationtype",
             templateUrl: "assets/views/groupinfo.html",

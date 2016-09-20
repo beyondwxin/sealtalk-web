@@ -176,6 +176,15 @@ mainServer.factory("mainServer", ["$http", "$q", "appconfig", function($http: an
                     method: "get",
                     url: serverBaseUrl + "/user/get_image_token"
                 });
+            },
+            setPortraitUri: function(uri: string) {
+                return $http({
+                    method: "POST",
+                    url: serverBaseUrl + "/user/set_portrait_uri",
+                    data: {
+                        portraitUri: uri
+                    }
+                });
             }
         },
         friend: {
@@ -1731,6 +1740,7 @@ interface mainServer {
         sync(version: number): angular.IHttpPromise<any>
         getMyGroups(): angular.IHttpPromise<any>
         getImageToken(): angular.IHttpPromise<{ code: string, result: { target: string, token: string } }>
+        setPortraitUri(uri: string): angular.IHttpPromise<any>
     }
     friend: {
         getAll(): angular.IHttpPromise<any>

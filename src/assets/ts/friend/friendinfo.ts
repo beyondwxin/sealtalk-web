@@ -3,8 +3,8 @@
 
 var friendinfo = angular.module("webim.friendinfo", ["webim.main.server"]);
 
-friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state", "$stateParams", "$window", "mainDataServer", "mainServer",
-    function($scope: any, $rootScope: any, $state: angular.ui.IStateService, $stateParams: any, $window: angular.IWindowService, mainDataServer: mainDataServer, mainServer: mainServer) {
+friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state", "$stateParams", "$window", "mainDataServer", "mainServer", "RongIMSDKServer",
+    function($scope: any, $rootScope: any, $state: angular.ui.IStateService, $stateParams: any, $window: angular.IWindowService, mainDataServer: mainDataServer, mainServer: mainServer, RongIMSDKServer: RongIMSDKServer) {
 
         $scope.$on("$viewContentLoaded", function() {
             setPortrait();
@@ -25,7 +25,7 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         var member = friend ? null : mainDataServer.contactsList.getGroupMember(conversationtype ? targetid : groupid, userid);
 
         var isself = friend ? null : mainDataServer.loginUser.id == userid;
-
+        $scope.conversationtype = conversationtype;
         $scope.isfriend = !!friend;
         $scope.isself = !!isself;
         $scope.user = new webimmodel.UserInfo();
@@ -50,6 +50,7 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
                 $scope.user.firstchar = f.firstchar;
                 $scope.user.displayName = f.displayName;
                 $scope.user.mobile = f.mobile;
+                $scope.newName = $scope.user.displayName || $scope.user.nickName;
             })
 
         } else if (member) {
@@ -74,8 +75,39 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         }
 
 
-        $scope.edit = function() {
-            $state.go("main.editfriendinfo", { userid: userid, groupid: groupid, targetid: targetid, conversationtype: conversationtype });
+        $scope.isEditable = false;
+        $scope.newName = $scope.user.displayName || $scope.user.nickName;
+        $scope.edit = function () {
+            // $state.go("main.editfriendinfo", { userid: userid, groupid: groupid, targetid: targetid, conversationtype: conversationtype });
+            $scope.isEditable = true;
+        };
+        $scope.editSave = function() {
+          if($scope.newName == $scope.user.displayName){
+            $scope.isEditable = false;
+            return;
+          }
+          if ($scope.modifyName.$valid) {
+            if(isself){
+              mainServer.user.setNickName($scope.newName).success(function() {
+                  mainDataServer.loginUser.nickName = $scope.newName;
+                  mainDataServer.loginUser.firstchar = webimutil.ChineseCharacter.getPortraitChar($scope.newName);
+                  $scope.isEditable = false;
+              })
+            }else{
+              mainServer.friend.setDisplayName(userid, $scope.newName).success(function(rep) {
+                  if (rep.code == 200) {
+                      if (friend) {
+                        friend.name = $scope.newName;
+                      }
+                      mainDataServer.conversation.updateConversationTitle(webimmodel.conversationType.Private, userid, $scope.newName);
+                      $scope.user.displayName = $scope.newName;
+                      $scope.isEditable = false;
+                  }
+              }).error(function() {
+                  webimutil.Helper.alertMessage.error("修改用户名失败", 2);
+              });
+            }
+          }
         }
 
         $scope.toAddFriend = function() {
@@ -85,6 +117,60 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         $scope.toConversation = function() {
             $state.go("main.chat", { targetId: $scope.user.id, targetType: webimmodel.conversationType.Private }, { location: "replace" });
         };
+
+        var addBlackList = function(id: any) {
+            mainServer.user.addToBlackList(id).success(function() {
+                mainDataServer.blackList.add(new webimmodel.Friend({
+                    id: $scope.user.id,
+                    name: $scope.user.nickName,
+                    imgSrc: $scope.user.portraitUri
+                }))
+            })
+        }
+        var removeBlackList = function(id: any) {
+            mainServer.user.removeFromBlackList(id).success(function() {
+                mainDataServer.blackList.remove(id);
+            });
+        }
+
+        $scope.user.inBlackList = mainDataServer.blackList.getById(userid) ? true : false;
+
+        var loading = false;
+
+        $scope.removeFriend = function() {
+            //删除好友
+            //请求服务器删除
+            if (loading)
+                return;
+            loading = true;
+            mainServer.friend.setDisplayName($scope.user.id, "").success(function() {
+            }).error(function() {
+                console.log("删除好友昵称失败");
+            })
+            mainServer.friend.delete($scope.user.id).success(function() {
+                RongIMSDKServer.removeConversation(webimmodel.conversationType.Private, $scope.user.id).then(function() {
+                    loading = false;
+                    var bo = mainDataServer.contactsList.removeFriend($scope.user.id);
+                    bo ? "" : console.log("删除好友失败");
+                    $state.go("main");
+                }, function() {
+                    console.log("删除失败");
+                });
+
+            }).error(function() {
+                loading = false;
+                webimutil.Helper.alertMessage.error("删除失败", 2);
+            })
+
+        }
+
+        $scope.switchchange = function() {
+            if ($scope.user.inBlackList) {
+                addBlackList($scope.user.id);
+            } else {
+                removeBlackList($scope.user.id);
+            }
+        }
 
         function goback() {
             if (groupid && groupid != "0") {
@@ -99,9 +185,43 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         }
 
         $scope.back = function() {
-            // goback();
-            // $rootScope.back();
-            window.history.back();
+            if($scope.isEditable){
+              $scope.editSave();
+            }else{
+              window.history.back();
+            }
         }
+
+        // mainServer.user.setPortraitUri(file.fileUrl).then(function(rep) {
+        //     $scope.user.portraitUri = rep.config.data.portraitUri;
+        //     mainDataServer.loginUser.portraitUri = rep.config.data.portraitUri;
+        // })
+
+
+        // RongIMLib.RongUploadLib.getInstance().setListeners({
+        //   onFileAdded:function(file: any){
+        //     RongIMLib.RongUploadLib.getInstance().start(null, null);
+        //   },
+        //   onBeforeUpload:function(file: any){
+        //   },
+        //   onUploadProgress:function(file: any){
+        //   },
+        //   onFileUploaded:function( file: any, message: webimmodel.Message){
+        //       mainServer.user.setPortraitUri(file.fileUrl).then(function(rep) {
+        //           $scope.user.portraitUri = rep.config.data.portraitUri;
+        //           mainDataServer.loginUser.portraitUri = rep.config.data.portraitUri;
+        //       })
+        //
+        //   },
+        //   onError:function(up: any, err: any, errTip: string){
+        //         $scope.uploadStatus.show = false;
+        //         webimutil.Helper.alertMessage.error("上传图片出错！", 2);
+        //
+        //   },
+        //   onUploadComplete:function(){
+        //   }
+        // });
+        //
+        // RongIMLib.RongUploadLib.getInstance().reload('IMAGE', 'FILE');
 
     }]);

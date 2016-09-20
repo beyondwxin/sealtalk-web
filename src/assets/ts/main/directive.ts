@@ -10,34 +10,34 @@ mainDire.directive("conversation", ["$state", "mainDataServer", function($state:
         },
         template: '<div class="chatList" ng-class="{selected:isCurrentConversation}" id="{{item.targetType}}_{{item.targetId}}">' +
         '<div class="chat_item online slide-left">' +
-        '<div class="ext">' +
-        '<p class="attr clearfix timer">' +
-        '<span class="pull-left">{{item.lastTime|showTime}}</span>' +
-        // '<span class="pull-right timeBoundary">PM</span>' +
-        '</p>' +
 
-        // '<p class="attr ">' +
-        '<p class="attr clearfix">' +
-        '<span class="badge" ng-if="item.unReadNum>0">{{item.unReadNum>99?"99+":item.unReadNum}}</span>' +
-
-        '<i class="no-remind" ng-show="false"></i>' +
-        '</p>' +
-        '</div>' +
         '<div class="photo">' +
         '<img class="img" ng-show="item.imgSrc" ng-src="{{item.imgSrc||\'assets/img/barBg.png\'}}" alt="">' +
         '<div class="portrait" ng-show="!item.imgSrc">{{item.firstchar}}</div>' +
         '<i class="Presence Presence--stacked Presence--mainBox" ng-show="{{item.targetType==4}}"></i>' +
         '</div>' +
+
+'<div class="ext_info">' +
+        '<div class="ext">' +
+        '<p class="attr clearfix timer">' +
+        '<span class="pull-left">{{item.lastTime|showTime}}</span>' +
+        '</p>' +
+        '<p class="attr clearfix">' +
+        '<span class="badge" ng-if="item.unReadNum>0">{{item.unReadNum>99?"99+":item.unReadNum}}</span>' +
+        '<i class="no-remind" ng-show="false"></i>' +
+        '</p>' +
+        '</div>' +
+
         '<div class="info">' +
         '<h3 class="nickname">' +
         '<span class="nickname_text">{{item.title}}</span>' +
         '</h3>' +
         '<p class="msg ng-scope" >' +
-        // '<span ng-if="item.unReadNum>0" class="ng-binding ng-scope">[{{item.unReadNum}}条未读]</span>' +
         '<span class="at_show" ng-show="item.atStr">{{item.atStr}}</span>' +
         '<span ng-bind-html="item.lastMsg|trustHtml" class="ng-binding"></span>' +
         '</p>' +
         '</div>' +
+'</div>' +
         '</div>' +
         '</div>',
         link: function(scope: any, ele: angular.IRootElementService, attrs: any, ngModel: any) {
@@ -131,6 +131,8 @@ mainDire.directive("groupitem", ["$state", function($state: angular.ui.IStateSer
 
             ele.on("click", function() {
                 // $state.go("main.groupinfo", { groupid: scope.item.id, conversationtype: "0" });
+                // scope.$parent.unSelectContact();
+                // angular.element(ele[0]).addClass('selected');
                 scope.$parent.selectGoGroup(scope.item.id, webimmodel.conversationType.Group);
             });
         }
@@ -160,6 +162,8 @@ mainDire.directive("frienditem", ["$state", function($state: angular.ui.IStateSe
 
             ele.on("click", function() {
                 // $state.go("main.friendinfo", { userid: scope.item.id, groupid: "0", targetid: "0", conversationtype: "0" });
+                // scope.$parent.unSelectContact();
+                // angular.element(ele[0]).addClass('selected');
                 scope.$parent.selectGo(scope.item.id, webimmodel.conversationType.Private);
             });
         }
@@ -176,10 +180,9 @@ mainDire.directive("searchInput", ["$timeout", function($timeout: angular.ITimeo
             focus: "&",
             control: '='
         },
-        template: '<form class="searchArea">' +
+        template: '<form class="searchArea clearfix">' +
         '<div class="form-group">' +
-        '<input type="text" class="form-control" id="{{id}}" ng-model="content" placeholder="{{showText||\'搜索\'}}">' +
-        '<i class="clearInputBtn" ng-show="content.length>0" ng-click="clear()"></i>' +
+        '<input type="text" class="form-control" id="{{id}}" ng-model="content" placeholder="{{showText||\'搜索\'}}">' +        // '<i class="clearInputBtn" ng-show="content.length>0" ng-click="clear()"></i>' +
         '<label class="" for="{{id}}"></label>' +
         '</div>' +
         '</form>',

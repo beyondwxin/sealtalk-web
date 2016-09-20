@@ -71,8 +71,8 @@ var RongIMLib;
         };
         RongUploadLib.prototype.start = function (conversationType, targetId) {
             var me = this;
-            this.conversationType = conversationType;
-            this.targetId = targetId;
+            this.conversationType = conversationType || null;
+            this.targetId = targetId || null;
             this.store[this.uploadType].start();
         };
         RongUploadLib.prototype.cancel = function (fileId) {
@@ -208,10 +208,10 @@ var RongIMLib;
                         var name = "";
                         file.oldName = file.name;
                         if (file.name.lastIndexOf('.') > -1) {
-                            name = (+new Date) + '-' + Math.floor(Math.random() * 1000) + '.' + file.name.substr(file.name.lastIndexOf('.') + 1);
+                            name = file.id + file.name.substr(file.name.lastIndexOf('.'));
                         }
                         else {
-                            name = (+new Date) + '-' + Math.floor(Math.random() * 1000);
+                            name = file.id;
                         }
                         file.name = name;
                         file.uploadType = me.uploadType;
@@ -224,21 +224,34 @@ var RongIMLib;
                     'FileUploaded': function (up, file, info) {
                         var option = up.getOption();
                         if (file.name.lastIndexOf('.') > -1) {
-                            options.fileName = file.target_name;
+                            var index = file.target_name.lastIndexOf('.');
+                            options.fileName = file.target_name.substr(0, index) + '.' + file.target_name.substr(index + 1).toLocaleLowerCase();
                         }
                         else {
                             options.fileName = file.id;
                         }
                         file.uploadType = me.uploadType;
                         me.createMessage(options, file, function (msg) {
-                            RongIMLib.RongIMClient.getInstance().sendMessage(me.conversationType, me.targetId, msg, {
-                                onSuccess: function (ret) {
-                                    me.listener.onFileUploaded(file, ret);
-                                },
-                                onError: function (error, ret) {
-                                    me.listener.onFileUploaded(file, ret, error);
-                                }
-                            });
+                            if (!me.conversationType && !me.targetId && msg.messageName == RongIMLib.RongIMClient.MessageType['ImageMessage']) {
+                                var imageMessage = msg;
+                                file.fileUrl = imageMessage.imageUri;
+                                me.listener.onFileUploaded(file);
+                            }
+                            else if (!me.conversationType && !me.targetId && msg.messageName == RongIMLib.RongIMClient.MessageType['FileMessage']) {
+                                var fileMessage = msg;
+                                file.fileUrl = fileMessage.fileUrl;
+                                me.listener.onFileUploaded(file);
+                            }
+                            else {
+                                RongIMLib.RongIMClient.getInstance().sendMessage(me.conversationType, me.targetId, msg, {
+                                    onSuccess: function (ret) {
+                                        me.listener.onFileUploaded(file, ret);
+                                    },
+                                    onError: function (error, ret) {
+                                        me.listener.onFileUploaded(file, ret, error);
+                                    }
+                                });
+                            }
                         });
                     },
                     'Error': function (up, err, errTip) {
@@ -264,6 +277,7 @@ var RongIMLib;
             var msg = null;
             switch (option.uploadType) {
                 case 'IMAGE':
+                    var oriName = option.fileName.lastIndexOf('.') == -1 ? option.fileName + '.jpg' : encodeURIComponent(option.fileName);
                     RongIMLib.RongIMClient.getInstance().getFileUrl(RongIMLib.FileType.IMAGE, option.fileName, null, {
                         onSuccess: function (data) {
                             if (option.isBase64Data) {

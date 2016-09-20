@@ -60,6 +60,12 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
             issearchList: false
         }
         $scope.curCon = "";
+
+        $scope.unSelectContact = function () {
+          $('div.communicateList').find('div.members_item').removeClass("selected");
+          $('div.communicateList').find('div.notice_item').removeClass("selected");
+        };
+
         $scope.unSelect = function (curConVal: string) {
             if($scope.curCon){
               $('#' + $scope.curCon).removeClass("selected");
@@ -172,10 +178,10 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
                     }
                 } else {
                     $scope.showState.isPhone = false;
-                    var ele = <any>document.querySelector(".mainBox");
-                    if (ele) {
-                        ele.style.width = '314px';
-                    }
+                    // var ele = <any>document.querySelector(".mainBox");
+                    // if (ele) {
+                    //     ele.style.width = '314px';
+                    // }
                 }
                 var chat = document.getElementById("chatArea");
                 if (chat) {
@@ -310,6 +316,7 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
                   mainDataServer.conversation.updateConversations();
               });
               RongIMLib.RongUploadLib.init(
+                {domain:IMGDOMAIN,drop_element:'',container:'functionBox',browse_button:'myPortrait' },
                 {domain:IMGDOMAIN,drop_element:'',container:'MessageForm',browse_button:'upload-image'},
                 {domain:FILEDOMAIN,drop_element:'chatMain',container:'MessageForm',browse_button:'upload-file'}
               );

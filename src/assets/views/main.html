@@ -3,7 +3,7 @@
       <div class="no_network"><span>当前网络不可用，请检查你的网络设置</span></div>
           <div class="toolbar pull-left" ng-show="!showState.isPhone||!showState.isChat">
               <div class="bar LeftNav">
-                  <div class="LeftNav-item" title="我的" ui-sref="main.userinfo">
+                 <div class="LeftNav-item" title="我的" ui-sref="main.friendinfo({userid: mainData.loginUser.id, groupid: '0', targetid: '0', conversationtype: '0'})">
                       <div class="user">
                         <div id="loginuser" class="portrait" ng-show="!mainData.loginUser.portraitUri">
                           {{mainData.loginUser.firstchar}}
@@ -25,15 +25,13 @@
                         <i class="Presence Presence--stacked" ng-show="mainData.notification.hasNewNotification"></i>
                     </div>
                 </div>
-                  <div class="LeftNav-item iconfont-add"  addbtn>
+                  <div class="LeftNav-item iconfont-add" ui-sref="main.userinfo">
                     <div>
                       <a >add</a>
-                      <ul class="addPanel" style="display:none">
+                      <!-- <ul class="addPanel" style="display:none">
                           <li id="createGroup"><a  ui-sref="main.creategroup">创建群组</a></li>
                           <li id="addFriends"><a  ui-sref="main.searchfriend">添加好友</a></li>
-                          <!-- <li id="addDiscussion"><a  ui-sref="main.discussionaddmember({iscreate: 'true', idorname: ''})">发起聊天</a></li> -->
-                          <!-- <li id="addGroup"><a href="javascript:void (0)" ui-sref="main.searchgroup">加入群组</a></li> -->
-                      </ul>
+                      </ul> -->
                     </div>
                   </div>
               </div>
@@ -41,7 +39,14 @@
           <div class="mainBox pull-left" ng-show="!showState.isPhone||!showState.isChat">
               <div id="search-friend">
                 <search-input search="search(content)"  control="searchControl" delay-time="0" show-text="搜索"></search-input>
+                <div class="searchAdd" addbtn>
+                  <ul class="addPanel" style="display:none">
+                  <li id="createGroup"><a  ui-sref="main.creategroup">创建群组</a></li>
+                  <li id="addFriends"><a  ui-sref="main.searchfriend">添加好友</a></li>
+                  </ul>
+                </div>
               </div>
+
               <div id="chatArea" class="chatArea" ng-show="!switchbtn.isFriendList&&!switchbtn.issearchList">
                 <p class="withoutFriends" style="text-align:center;margin-top: 200px;" ng-show="!mainData.conversation.conversations||!mainData.conversation.conversations.length">您还没有添加会话</p>
                   <conversation ng-repeat="item in mainData.conversation.conversations" item='item'></conversation>

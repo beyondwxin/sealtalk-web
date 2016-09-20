@@ -474,20 +474,13 @@ input::-ms-clear{display:none;}
     background: url(../img/icons.png) 10px -113px/108px auto no-repeat #fff;
     background-color: #fff;
 }
-#search-friend {
-  overflow: hidden;
-}
-#search-friend .searchArea{
-  float: left;
-}
-#search-friend .searchAdd {
+
+.searchArea .searchAdd {
     width: 35px;
     height: 30px;
     background: url(../img/searchAdd.png) no-repeat;
     background-size: 35px auto;
     cursor: pointer;
-    float: left;
-    margin: 12px 0px 12px 10px;
 }
 
 .searchArea div label {
@@ -3468,7 +3461,7 @@ input::-ms-clear{display:none;}
 .groupInfo .info .groupName .edit-group-name{
     width: 17px;
     height: 18px;
-    background: url(../img/editicon.png) no-repeat;
+    background: url(../img/editicon.jpg) no-repeat;
     background-size: 17px;
     cursor: pointer;
     float: left;
@@ -3500,22 +3493,14 @@ input::-ms-clear{display:none;}
 .groupDataList .line .li .portrait{
     width: 36px;
     height: 36px;
-    /*background: url(../img/room_icon.png) no-repeat;*/
+    background: url(../img/room_icon.png) no-repeat;
     background-size: 36px 36px;
     vertical-align: middle;
-    line-height: 36px;
-    font-size: 20px;
 }
-/*.groupDataList .line .li .portrait{
-    width: 36px;
-    height: 36px;
-    line-height: 36px;
-    font-size: 20px;
-}*/
 .groupDataList .line .li span{
     vertical-align: middle;
     display: inline-block;
-    width: 100px;
+    width: 150px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -3551,7 +3536,7 @@ input::-ms-clear{display:none;}
 .edit-global-name{
     width: 17px;
     height: 18px;
-    background: url(../img/editicon.png) no-repeat;
+    background: url(../img/editicon.jpg) no-repeat;
     background-size: 17px;
     cursor: pointer;
     float: left;
@@ -3620,7 +3605,7 @@ input::-ms-clear{display:none;}
     vertical-align: middle;
     width: 15px;
     height: 13px;
-    background: url(../img/showMore.png) no-repeat;
+    background: url(../img/showMore.jpg) no-repeat;
     background-size: 15px auto;
 }
 

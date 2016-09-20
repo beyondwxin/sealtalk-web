@@ -12,17 +12,6 @@ groupInfo.controller("groupinfoController", ["$scope", "$rootScope", "$state", "
 
         $scope.isEditable = false;
 
-        function back() {
-            if (conversationtype && conversationtype != "0") {
-                $state.go("main.chat", { targetId: groupid, targetType: conversationtype });
-            } else {
-                $state.go("main");
-            }
-        }
-        $scope.back = function() {
-            back();
-            // $rootScope.back();
-        }
 
         var groupid = $stateParams["groupid"];
         var conversationtype = $stateParams["conversationtype"];
@@ -31,12 +20,74 @@ groupInfo.controller("groupinfoController", ["$scope", "$rootScope", "$state", "
 
         if (!$scope.groupInfo) {
             webimutil.Helper.alertMessage.error("您不在此群组中", 2);
-            back();
+            // back();
         }
 
         if ($scope.groupInfo.creater == mainDataServer.loginUser.id) {
             $scope.groupInfo.isCreater = true;
         }
+
+        $scope.edit = function() {
+            $scope.isEditable = true;
+            $scope.newName = $scope.groupInfo.name || '';
+            setTimeout(function() {
+                var ele = <any>document.getElementById("editName");
+                ele.focus();
+                ele.select();
+            }, 0);
+        }
+
+        $scope.editSave = function() {
+          if($scope.newName == $scope.groupInfo.name){
+            $scope.isEditable = false;
+            return;
+          }
+          if ($scope.modifyName.$valid) {
+            mainServer.group.rename(groupid, $scope.newName).success(function(rep) {
+                if (rep.code == 200) {
+                    //修改缓存的群组名,修改会话中的名称
+                    if ($scope.groupInfo) {
+                      $scope.groupInfo.name = $scope.newName;
+                    }
+                    mainDataServer.conversation.updateConversationTitle(webimmodel.conversationType.Group, groupid, $scope.newName);
+                    $scope.isEditable = false;
+                }
+            }).error(function() {
+                webimutil.Helper.alertMessage.error("修改群组名称失败", 2);
+            });
+          }
+        }
+
+        $scope.back = function() {
+          if($scope.isEditable){
+            $scope.editSave();
+          }else{
+            window.history.back();
+          }
+        }
+
+        //群信息更新界面
+        var lineNum = 5,memPerLine = 3, _showWidth: number,_memWidth: number;
+        _showWidth = $('div.groupDataList>div.line').width();
+        _memWidth = $('div.line>div.li').width();
+        if(_showWidth && _memWidth){
+          memPerLine = Math.floor(_showWidth/_memWidth);
+        }
+        $scope.isShowMore = false;
+        if($scope.groupInfo.memberList.length > lineNum * memPerLine - 2){
+          $scope.isShowMore = true;
+        }
+        $scope.showMember = function (num: number) {
+          if(num > 0){
+            $('div.groupDataList>div.line').find('div.li:lt(' + num + ')').show();
+          }else if(num == 0){
+             $('div.groupDataList>div.line').find('div.li').show();
+             $scope.isShowMore = false;
+          }
+        }
+        setTimeout(function () {
+            $scope.showMember(lineNum * memPerLine + 1);
+        }, 200);
 
         $scope.quitGroup = function() {
             mainServer.group.quit(groupid).success(function(rep) {
@@ -62,23 +113,24 @@ groupInfo.controller("groupinfoController", ["$scope", "$rootScope", "$state", "
             });
         }
         $scope.kickMember = function() {
-            var membersid = <string[]>[];
-            $scope.groupInfo.memberList.filter(function(item: any) {
-                if (item.isSelected) {
-                    return membersid.push(item.id);
-                }
-            });
-            mainServer.group.kickMember(groupid, membersid).success(function(rep) {
-                if (rep.code == 200) {
-                    for (var i = 0, len = membersid.length; i < len; i++) {
-                        mainDataServer.contactsList.removeGroupMember(groupid, membersid[i]);
-                    }
-                    $scope.isEditable = false;
-                }
-            }).error(function(err) {
-                console.log(err);
-                webimutil.Helper.alertMessage.error("删除失败", 2);
-            })
+            // var membersid = <string[]>[];
+            // $scope.groupInfo.memberList.filter(function(item: any) {
+            //     if (item.isSelected) {
+            //         return membersid.push(item.id);
+            //     }
+            // });
+            // mainServer.group.kickMember(groupid, membersid).success(function(rep) {
+            //     if (rep.code == 200) {
+            //         for (var i = 0, len = membersid.length; i < len; i++) {
+            //             mainDataServer.contactsList.removeGroupMember(groupid, membersid[i]);
+            //         }
+            //         $scope.isEditable = false;
+            //     }
+            // }).error(function(err) {
+            //     console.log(err);
+            //     webimutil.Helper.alertMessage.error("删除失败", 2);
+            // })
+            $state.go("main.groupdelmember", { idorname: $scope.groupInfo.id })
         }
         $scope.toChat = function() {
             $state.go("main.chat", { targetId: $scope.groupInfo.id, targetType: webimmodel.conversationType.Group }, { location: "replace" });
@@ -217,25 +269,30 @@ groupInfo.directive("member", ["$state", "mainDataServer", function($state: angu
     return {
         restrict: "E",
         scope: { item: "=", isshow: "=" },
-        template: '<li class="chat_item groupUser_item">' +
-        '<div class="select"  ng-show="isshow">' +
-        '<input type="checkbox" class="hide" ng-disabled="item.id==loginUserid" id="{{item.id}}" value="136" ng-model="item.isSelected" data-count="" name="">' +
-        '<label for="{{item.id}}"></label>' +
-        '</div>' +
-        '<div ng-click="showinfo()">' +
-        '<div class="photo">' +
-        '<img class="img" ng-show="item.imgSrc" ng-src="{{item.imgSrc||\'assets/img/barBg.png\'}}" alt="">' +
-        '<div class="portrait" ng-show="!item.imgSrc">{{item.firstchar}}</div>' +
-        '</div>' +
-        '<div class="info">' +
-        '<h3 class="nickname">' +
-        '<span class="nickname_text">{{showName}}</span>' +
-        '</h3>' +
-        '</div>' +
-        '</div>' +
-        '</li>',
+        // template: '<li class="chat_item groupUser_item">' +
+        // '<div class="select"  ng-show="isshow">' +
+        // '<input type="checkbox" class="hide" ng-disabled="item.id==loginUserid" id="{{item.id}}" value="136" ng-model="item.isSelected" data-count="" name="">' +
+        // '<label for="{{item.id}}"></label>' +
+        // '</div>' +
+        // '<div ng-click="showinfo()">' +
+        // '<div class="photo">' +
+        // '<img class="img" ng-show="item.imgSrc" ng-src="{{item.imgSrc||\'assets/img/barBg.png\'}}" alt="">' +
+        // '<div class="portrait" ng-show="!item.imgSrc">{{item.firstchar}}</div>' +
+        // '</div>' +
+        // '<div class="info">' +
+        // '<h3 class="nickname">' +
+        // '<span class="nickname_text">{{showName}}</span>' +
+        // '</h3>' +
+        // '</div>' +
+        // '</div>' +
+        // '</li>',
+        template: '<div class="clearfix li" style="display:none">' +
+            '<img class="portrait img" ng-show="item.imgSrc" ng-src="{{item.imgSrc||\'assets/img/barBg.png\'}}" alt="">' +
+            '<div class="portrait" ng-show="!item.imgSrc">{{item.firstchar}}</div>' +
+            '<span>{{showName}}</span>' +
+            '</div>',
         link: function(scope: any, ele: any, attr: any) {
-            angular.element(ele[0].getElementsByClassName("portrait")[0]).css("background-color", webimutil.Helper.portraitColors[scope.item.id.charCodeAt(0) % webimutil.Helper.portraitColors.length]);
+            angular.element(ele[0].getElementsByClassName("portrait")[1]).css("background-color", webimutil.Helper.portraitColors[scope.item.id.charCodeAt(0) % webimutil.Helper.portraitColors.length]);
             //查找是否在好友列表中
             var user = mainDataServer.contactsList.getFriendById(scope.item.id);
             if(user){
@@ -246,15 +303,6 @@ groupInfo.directive("member", ["$state", "mainDataServer", function($state: angu
                 $state.go("main.friendinfo", { userid: scope.item.id, groupid: scope.$parent.groupInfo.id, targetid: scope.$parent.groupInfo.id, conversationtype: $state.params["conversationtype"] });
             }
             scope.loginUserid = mainDataServer.loginUser.id;
-            scope.$watch("item.isSelected", function(newValue: boolean, oldValue: boolean) {
-                if (newValue == oldValue) {
-                    return;
-                }
-                // if (newValue && scope.item.id == mainDataServer.loginUser.id) {
-                //     webimutil.Helper.alertMessage.error("您不可以将自己删除", 2);
-                //     scope.item.isSelected = false;
-                // }
-            })
         }
     }
 }])
