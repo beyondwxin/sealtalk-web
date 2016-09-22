@@ -548,7 +548,9 @@ conversationDire.directive("textMessage", [function() {
             item: "=",
             message: "="
         },
-        template: '<div class="" id="{{message.messageUId}}">' +
+        template: '<div class="" id="{{message.messageUId || message.messageId}}">' +
+            '<div class="{{msgStyle}} message_statue_position"></div>' +
+        '<div class="{{msgStyle}} message_statue_position"></div>' +
         '<div class="Message-text">' +
         // '<pre class="at_all_people" ng-show="isAtAll">@所有人</pre>' +
         '<pre class="Message-entry" ng-bind-html="content|trustHtml">' +
@@ -627,6 +629,39 @@ conversationDire.directive("textMessage", [function() {
               console.log('显示右键菜单', e.which, e.currentTarget.id, e);
               return false;
             });
+
+            switch (scope.message.sentStatus) {
+                case webimmodel.SentStatus.SENDING:
+                    scope.msgStyle = 'message_statue_sending';
+                    break;
+                case webimmodel.SentStatus.FAILED:
+                    scope.msgStyle = 'message_statue_unsend';
+                    break;
+                case webimmodel.SentStatus.SENT:
+                    scope.msgStyle = '';
+                    break;
+                default:
+                    scope.msgStyle = '';
+                    break;
+
+            }
+
+          //   var unbingWatch = scope.$watch("message.sentStatus", function (newVal: number, oldVal: number) {
+          //      switch(newVal){
+          //        case webimmodel.SentStatus.SENDING:
+          //           scope.msgStyle = 'message_statue_sending';
+          //           break;
+          //        case webimmodel.SentStatus.FAILED:
+          //            scope.msgStyle = 'message_statue_unsend';
+          //            unbingWatch();
+          //            break;
+          //        case webimmodel.SentStatus.SENT:
+          //           scope.msgStyle = '';
+          //           unbingWatch();
+          //           break;
+           //
+          //      }
+          //  });
         }
     }
 }])
@@ -742,8 +777,12 @@ conversationDire.directive("locationMessage", [function() {
 conversationDire.directive("fileMessage", [function() {
     return {
         restrict: "E",
-        scope: { item: "=" },
-        template: '<div class="" id="{{itemid}}">' +
+        scope: {
+          item: "=",
+          message: "="
+        },
+        template: '<div class="" id="{{message.messageUId || message.messageId}}">' +
+        '<div class="{{msgStyle}} message_statue_position"></div>' +
         '<div class="upload_file">' +
          '<div class="out_border">' +
             '<div class="file_type fl">' +

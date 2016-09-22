@@ -16,6 +16,39 @@ groupInfo.controller("groupinfoController", ["$scope", "$rootScope", "$state", "
         var groupid = $stateParams["groupid"];
         var conversationtype = $stateParams["conversationtype"];
 
+
+        mainServer.group.getById(groupid).success(function (rep) {
+            mainDataServer.contactsList.updateGroupInfoById(groupid, new webimmodel.Group({
+                id: rep.result.id,
+                name: rep.result.name,
+                imgSrc: rep.result.portraitUri,
+                upperlimit: undefined,
+                fact: undefined,
+                creater: undefined
+            }));
+            //更新会话列表
+            mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Group, groupid, rep.result.name, rep.result.portraitUri);
+            var item = mainDataServer.contactsList.getGroupById(groupid);
+            if (item) {
+               item.memberList.length = 0;
+            }
+            mainServer.group.getGroupMember(groupid).success(function (rep2) {
+                var members = rep2.result;
+                for (var j = 0, len = members.length; j < len; j++) {
+                    var member = new webimmodel.Member({
+                        id: members[j].user.id,
+                        name: members[j].user.nickname,
+                        imgSrc: members[j].user.portraitUri,
+                        role: members[j].role,
+                        displayName: members[j].displayName
+                    });
+                    mainDataServer.contactsList.addGroupMember(groupid, member);
+                }
+            });
+
+        }).error(function () {
+        });
+
         $scope.groupInfo = mainDataServer.contactsList.getGroupById(groupid);
 
         if (!$scope.groupInfo) {

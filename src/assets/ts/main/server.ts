@@ -783,6 +783,40 @@ mainServer.factory("mainDataServer", ["$q", "RongIMSDKServer", "mainServer", fun
               console.log("RongIMSDKServer.getConversation err:" + err, type, id);
             });
         },
+        updateConStaticBeforeSend: function (msg: webimmodel.Message, add: boolean){
+          var type = msg.conversationType , id = msg.targetId;
+          var hasCon = false;
+          var oldUnread = 0, totalUnreadCount = mainDataServer.conversation.totalUnreadCount, isfirst = false, conversationItem:webimmodel.Conversation;
+          for (var i = 0, len = mainDataServer.conversation.conversations.length; i < len; i++) {
+              conversationItem = mainDataServer.conversation.conversations[i];
+              if (conversationItem.targetType == type && conversationItem.targetId == id) {
+                  switch(msg.messageType){
+                    case webimmodel.MessageType.TextMessage:
+                      conversationItem.lastMsg = msg.content.content;
+                      break;
+                    case webimmodel.MessageType.ImageMessage:
+                      conversationItem.lastMsg = '[图片';
+                      break;
+                    case webimmodel.MessageType.FileMessage:
+                      conversationItem.lastMsg = '[文件] ' + msg.content.name;
+                      break;
+                  }
+
+                  conversationItem.lastTime = msg.sentTime;
+                  conversationItem.unReadNum = 0;
+                  conversationItem.atStr = '';
+                  if(type == webimmodel.conversationType.Group){
+                     conversationItem.lastMsg = '你: ' + conversationItem.lastMsg;
+                  }
+
+                  if(i > 0){
+                    mainDataServer.conversation.conversations.splice(i, 1);
+                    mainDataServer.conversation.conversations.unshift(conversationItem);
+                  }
+                  break;
+              }
+          }
+        },
         // updateConStatic: function (msg: webimmodel.Message, add: boolean, isChat:boolean) {
         //   var type = msg.conversationType , id = msg.targetId;
         //   var hasCon = false;
@@ -971,13 +1005,16 @@ mainServer.factory("mainDataServer", ["$q", "RongIMSDKServer", "mainServer", fun
             }
             return null;
         },
-        updateGroupNameById: function(id: string, name: string) {
+        updateGroupInfoById: function(id: string, group: webimmodel.Group) {
             for (let i = 0; i < this.groupList.length; i++) {
                 let item = this.groupList[i];
                 if (item.id == id) {
-                    item.name = name;
-                    var obj = webimutil.ChineseCharacter.convertToABC(name);
-                    var f = webimutil.ChineseCharacter.getPortraitChar(name);
+                    item.name = group.name;
+                    if(group.imgSrc){
+                      item.imgSrc = group.imgSrc;
+                    }
+                    var obj = webimutil.ChineseCharacter.convertToABC(group.name);
+                    var f = webimutil.ChineseCharacter.getPortraitChar(group.name);
                     item.setpinying({ pinyin: obj.pinyin, everychar: obj.first, firstchar: f })
                     return true;
                 }
@@ -1200,6 +1237,19 @@ mainServer.factory("mainDataServer", ["$q", "RongIMSDKServer", "mainServer", fun
                 }
             }
             return false;
+        },
+        updateGroupMember: function(memberId: string, member: webimmodel.Member) {
+            for (let i = 0; i < this.groupList.length; i++) {
+                let item = this.groupList[i];
+                let _member = this.getGroupMember(item.id, memberId);
+                if(_member) {
+                   _member.name = member.name;
+                   _member.imgSrc = member.imgSrc;
+                   var obj = webimutil.ChineseCharacter.convertToABC(_member.name);
+                   var f = webimutil.ChineseCharacter.getPortraitChar(_member.name);
+                   _member.setpinying({ pinyin: obj.pinyin, everychar: obj.first, firstchar: f });
+                }
+            }
         },
         getDiscussionMember: function(discussionId: string, memberId: string) {
             var item = this.getDiscussionById(discussionId);
@@ -1674,6 +1724,7 @@ interface mainDataServer {
         setDraft(type: string, id: string, msg: string): boolean
         clearMessagesUnreadStatus(type: string, id: string): boolean
         find(str: string, arr: webimmodel.Conversation[]): webimmodel.Conversation[]
+        updateConStaticBeforeSend(msg: webimmodel.Message, add: boolean): void
     }
     contactsList: {
         groupList: webimmodel.Group[],
@@ -1681,7 +1732,7 @@ interface mainDataServer {
         subgroupList: webimmodel.Subgroup[],
         discussionList: webimmodel.Discussion[],
         getGroupById(id: string): webimmodel.Group
-        updateGroupNameById(id: string, name: string): boolean
+        updateGroupInfoById(id: string, group: webimmodel.Group): boolean
         getDiscussionById(id: string): webimmodel.Discussion
         getFriendById(id: string): webimmodel.Friend
         // getSubgroupFriendById(id: string): webimmodel.Friend
@@ -1702,6 +1753,7 @@ interface mainDataServer {
         removeDiscussionMember(discussionId: string, memberid: string): boolean
         addNonFriend(group: webimmodel.Friend): void
         getNonFriendById(id: string): webimmodel.Friend
+        updateGroupMember(groupId: string, member: webimmodel.Member): any
     }
     notification: {
         hasNewNotification: boolean

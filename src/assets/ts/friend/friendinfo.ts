@@ -3,8 +3,8 @@
 
 var friendinfo = angular.module("webim.friendinfo", ["webim.main.server"]);
 
-friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state", "$stateParams", "$window", "mainDataServer", "mainServer", "RongIMSDKServer",
-    function($scope: any, $rootScope: any, $state: angular.ui.IStateService, $stateParams: any, $window: angular.IWindowService, mainDataServer: mainDataServer, mainServer: mainServer, RongIMSDKServer: RongIMSDKServer) {
+friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state", "$stateParams", "$window", "mainDataServer", "mainServer", "RongIMSDKServer", '$http',
+    function($scope: any, $rootScope: any, $state: angular.ui.IStateService, $stateParams: any, $window: angular.IWindowService, mainDataServer: mainDataServer, mainServer: mainServer, RongIMSDKServer: RongIMSDKServer, $http: angular.IHttpService) {
 
         $scope.$on("$viewContentLoaded", function() {
             setPortrait();
@@ -14,6 +14,63 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
                 angular.element(document.getElementById("portrait")).css("background-color", webimutil.Helper.portraitColors[userid.charCodeAt(0) % webimutil.Helper.portraitColors.length]);
             }
         }
+
+        $("#__selPortrait").css('opacity','0');
+        $('#__selPortrait').change(function(e){
+            if(e.target.files.length == 0){
+               return;
+            }
+            var _file = e.target.files[0];
+            mainServer.user.getImageToken().success(function(rep) {
+                var fd = new FormData();
+                fd.append("file", _file);
+              	fd.append("token",rep.result.token);
+                // var xhr = new XMLHttpRequest();
+                // xhr.onreadystatechange = function(e) {
+                //     if ( 4 == this.readyState ) {
+                //          var _obj = JSON.parse(this.responseText);
+                //          mainServer.user.setPortraitUri(IMGDOMAIN + _obj.key).success(function(rep) {
+                //            if (rep.code == 200) {
+                //              $scope.user.portraitUri = IMGDOMAIN + _obj.key;
+                //              mainDataServer.loginUser.portraitUri = IMGDOMAIN + _obj.key;
+                //            }
+                //         });
+                //     }
+                // };
+                // xhr.open('post', 'http://up.qiniu.com?', true);
+                // xhr.send(fd);
+
+                var req = {
+                    method: 'POST',
+                    url: 'http://up.qiniu.com?',
+                    headers: {
+                      //此处必须设置 undefined 
+                      'Content-Type': <any>undefined
+                    },
+                    transformRequest: angular.identity,
+                    withCredentials: false,
+                    data: fd
+                };
+                $http(req).success(function (res: any) {
+                       mainServer.user.setPortraitUri(IMGDOMAIN + res.key).success(function(rep) {
+                         if (rep.code == 200) {
+                           $scope.user.portraitUri = IMGDOMAIN + res.key;
+                           mainDataServer.loginUser.portraitUri = IMGDOMAIN + res.key;
+                         }
+                      });
+                }).error(function (err) {
+                    webimutil.Helper.alertMessage.error("头像上传出错！", 2);
+                });
+
+            }).error(function() {
+                webimutil.Helper.alertMessage.error("头像上传初始化失败", 2);
+            });
+
+        });
+        $("#__myPortrait").click(function(e){
+           e.preventDefault();
+           $("#__selPortrait").trigger('click');
+        });
 
         var userid = $stateParams["userid"];
         var groupid = $stateParams["groupid"];
@@ -42,8 +99,22 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
                 f.displayName = data.result.displayName;
                 f.mobile = data.result.user.phone;
                 // f = mainDataServer.contactsList.addFriend(f);
-                f = mainDataServer.contactsList.updateOrAddFriend(f);
-                mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Private, userid, data.result.displayName || data.result.user.nickname, data.result.user.portraitUri);
+                var fold = webimutil.ChineseCharacter.getPortraitChar2(friend.displayName || friend.name);
+                var fnew = webimutil.ChineseCharacter.getPortraitChar2(f.displayName || f.name);
+                if (fold != fnew) {
+                    mainDataServer.contactsList.removeFriendFromSubgroup(friend);
+
+                    f = mainDataServer.contactsList.updateOrAddFriend(f);
+                    mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Private, userid, data.result.displayName || data.result.user.nickname, data.result.user.portraitUri);
+
+                    var _member = new webimmodel.Member({
+                        id: data.result.user.id,
+                        name: data.result.user.nickname,
+                        imgSrc: data.result.user.portraitUri
+                    });
+                    mainDataServer.contactsList.updateGroupMember(_member.id, _member);
+                }
+
                 $scope.user.id = f.id;
                 $scope.user.nickName = f.name;
                 $scope.user.portraitUri = f.imgSrc;
@@ -53,26 +124,45 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
                 $scope.newName = $scope.user.displayName || $scope.user.nickName;
             })
 
-        } else if (member) {
-            $scope.user.id = member.id;
-            $scope.user.nickName = member.name;
-            $scope.user.portraitUri = member.imgSrc;
-            $scope.user.firstchar = member.firstchar;
-        } else if (isself) {
+        }
+        else if (isself) {
             $scope.user.id = mainDataServer.loginUser.id;
             $scope.user.nickName = mainDataServer.loginUser.nickName;
             $scope.user.portraitUri = mainDataServer.loginUser.portraitUri;
             $scope.user.firstchar = mainDataServer.loginUser.firstchar;
-        } else {
+        }
+        else {
             mainServer.user.getInfo(userid).then(function(rep) {
+
+                var f = new webimmodel.Friend({ id: rep.data.result.id, name: rep.data.result.nickname, imgSrc: rep.data.result.portraitUri });
+
+                // f = mainDataServer.contactsList.updateOrAddFriend(f);
+                // mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Private, userid, rep.data.result.displayName || rep.data.result.nickname, rep.data.result.portraitUri);
+                mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Private, userid, rep.data.result.displayName || rep.data.result.nickname, rep.data.result.portraitUri);
+
+                var _member = new webimmodel.Member({
+                    id: rep.data.result.id,
+                    name: rep.data.result.nickname,
+                    imgSrc: rep.data.result.portraitUri
+                });
+                mainDataServer.contactsList.updateGroupMember(_member.id, _member);
+
                 $scope.user.id = rep.data.result.id
                 $scope.user.nickName = rep.data.result.nickname
                 $scope.user.portraitUri = rep.data.result.portraitUri;
-
                 $scope.user.firstchar = webimutil.ChineseCharacter.getPortraitChar(rep.data.result.nickname);
                 setPortrait();
+
+
+
             })
         }
+        //  else if (member) {
+        //     $scope.user.id = member.id;
+        //     $scope.user.nickName = member.name;
+        //     $scope.user.portraitUri = member.imgSrc;
+        //     $scope.user.firstchar = member.firstchar;
+        // }
 
 
         $scope.isEditable = false;

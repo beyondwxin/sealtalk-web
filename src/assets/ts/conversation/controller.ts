@@ -41,9 +41,15 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
         $scope.defaultSearch = false;
 
 
-        if (groupid != "0") {
+
+
+        function initAtList(){
+          if($scope.groupInfo){
+            $scope.groupInfo = null;
+          }
           $scope.groupInfo = mainDataServer.contactsList.getGroupById(groupid);
           if($scope.groupInfo){
+            if(rawGroutList){rawGroutList = null}
             rawGroutList = webimutil.Helper.cloneObject($scope.groupInfo.memberList);
             for (var i = rawGroutList.length-1; i >= 0; i--) {
                 if (rawGroutList[i].id === mainDataServer.loginUser.id) {
@@ -53,6 +59,9 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
           }
 
           $scope.showGroupList = webimutil.Helper.cloneObject(rawGroutList);
+        }
+        if (groupid != "0") {
+          initAtList();
         }
 
         $scope.initAtDiv = function () {
@@ -363,12 +372,26 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
                if (friend) {
                    mainServer.friend.getProfile(targetId).success(function(data) {
                        var f = new webimmodel.Friend({ id: data.result.user.id, name: data.result.user.nickname, imgSrc: data.result.user.portraitUri });
-                       f.displayName = data.result.displayName;
+                       f.displayName = data.result.user.displayName;
                        f.mobile = data.result.user.phone;
                        // f = mainDataServer.contactsList.addFriend(f);
-                       f = mainDataServer.contactsList.updateOrAddFriend(f);
-                       mainDataServer.conversation.updateConversationDetail(targetType, targetId, data.result.displayName || data.result.user.nickname, data.result.user.portraitUri);
-                       conversationServer.updateHistoryMessagesCache(targetId, targetType, data.result.displayName || data.result.user.nickname, data.result.user.portraitUri);
+                      //  var friendOld = webimutil.Helper.cloneObject(friend);
+                       var fold = webimutil.ChineseCharacter.getPortraitChar2(friend.displayName || friend.name);
+                       var fnew = webimutil.ChineseCharacter.getPortraitChar2(f.displayName || f.name);
+                       if (fold != fnew) {
+                           mainDataServer.contactsList.removeFriendFromSubgroup(friend);
+
+                           f = mainDataServer.contactsList.updateOrAddFriend(f);
+                           mainDataServer.conversation.updateConversationDetail(targetType, targetId, data.result.displayName || data.result.user.nickname, data.result.user.portraitUri);
+                           conversationServer.updateHistoryMessagesCache(targetId, targetType, data.result.displayName || data.result.user.nickname, data.result.user.portraitUri);
+
+                           var _member = new webimmodel.Member({
+                               id: data.result.user.id,
+                               name: data.result.user.nickname,
+                               imgSrc: data.result.user.portraitUri
+                           });
+                           mainDataServer.contactsList.updateGroupMember(_member.id, _member);
+                       }
                    })
 
                } else if (isself)
@@ -376,16 +399,65 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
 
                }
                else {
-                  //  mainServer.user.getInfo(targetId).then(function(rep) {
-                  //      $scope.user.id = rep.data.result.id
-                  //      $scope.user.nickName = rep.data.result.nickname
-                  //      $scope.user.portraitUri = rep.data.result.portraitUri;
-                   //
-                  //      $scope.user.firstchar = webimutil.ChineseCharacter.getPortraitChar(rep.data.result.nickname);
-                  //      setPortrait();
-                  //  })
+                   mainServer.user.getInfo(targetId).then(function(rep) {
+
+                       var f = new webimmodel.Friend({ id: rep.data.result.id, name: rep.data.result.nickname, imgSrc: rep.data.result.portraitUri });
+                       // f.displayName = rep.data.result.displayName;
+                       // f.mobile = rep.data.result.phone;
+                      //  f = mainDataServer.contactsList.updateOrAddFriend(f);
+                       mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Private, targetId, rep.data.result.displayName || rep.data.result.nickname, rep.data.result.portraitUri);
+
+                       var _member = new webimmodel.Member({
+                           id: rep.data.result.id,
+                           name: rep.data.result.nickname,
+                           imgSrc: rep.data.result.portraitUri
+                       });
+                       mainDataServer.contactsList.updateGroupMember(_member.id, _member);
+
+                      //  $scope.user.firstchar = webimutil.ChineseCharacter.getPortraitChar(rep.data.result.nickname);
+                      //  setPortrait();
+                   })
                }
 
+            }
+            else if(targetType == webimmodel.conversationType.Group){
+
+              mainServer.group.getById(targetId).success(function (rep) {
+                  // if(rep.result.name && rep.result.name != $scope.groupInfo.name || rep.result.portraitUri && $scope.groupInfo.imgSrc != rep.result.portraitUri){
+                    mainDataServer.contactsList.updateGroupInfoById(targetId, new webimmodel.Group({
+                        id: rep.result.id,
+                        name: rep.result.name,
+                        imgSrc: rep.result.portraitUri,
+                        upperlimit: undefined,
+                        fact: undefined,
+                        creater: undefined
+                    }));
+                    //更新会话列表
+                    mainDataServer.conversation.updateConversationDetail(webimmodel.conversationType.Group, targetId, rep.result.name, rep.result.portraitUri);
+
+                    mainServer.group.getGroupMember(targetId).success(function (rep2) {
+                        var members = rep2.result;
+                        if(members){
+                          var item = mainDataServer.contactsList.getGroupById(targetId);
+                          if (item) {
+                              item.memberList.length = 0;
+                          }
+                        }
+                        for (var j = 0, len = members.length; j < len; j++) {
+                            var member = new webimmodel.Member({
+                                id: members[j].user.id,
+                                name: members[j].user.nickname,
+                                imgSrc: members[j].user.portraitUri,
+                                role: members[j].role,
+                                displayName: members[j].displayName
+                            });
+                            mainDataServer.contactsList.addGroupMember(targetId, member);
+                        }
+                        initAtList();
+                    });
+                  // }
+              }).error(function () {
+              });
             }
         }
 
@@ -553,6 +625,7 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
 
             var msgouter = packmysend(msg, webimmodel.MessageType.TextMessage);
             var appendMsg = webimmodel.Message.convertMsg(msgouter);
+            appendMsg.sentStatus = webimmodel.SentStatus.SENDING;
 
             //添加消息到历史消息并清空发送消息框
             conversationServer.addHistoryMessages(targetId, targetType, appendMsg);
@@ -566,14 +639,29 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
             var obj = document.getElementById("message-content");
             webimutil.Helper.getFocus(obj);
 
+            $scope.mainData.conversation.updateConStaticBeforeSend(appendMsg, true);
+            $('#' + targetType + '_' + targetId).find('.no-remind').siblings('span').removeClass().addClass("message_statue_sending");
+
             RongIMSDKServer.sendMessage(targetType, targetId, msg, atFlag && (targetType == webimmodel.conversationType.Group || targetType == webimmodel.conversationType.Discussion)).then(function(msg) {
                atArray = [];
+               $('#' + targetType + '_' + targetId).find('.no-remind').siblings('span').removeClass();
+               setTimeout(function () {
+                 $('#' + msg.messageUId).find('.message_statue_position').removeClass().addClass("message_statue_position");
+               }, 0);
+               conversationServer.updateSendStatus(targetId, targetType, appendMsg.messageId, webimmodel.SentStatus.FAILED);
                var _message = webimmodel.Message.convertMsg(msg);
                conversationServer.messageAddUserInfo(_message);
                $scope.mainData.conversation.updateConStatic(_message, true, true);
                conversationServer.updateSendMessage(targetId, targetType, _message);
             }, function(error: any) {
+
               var content = '';
+              $('#' + targetType + '_' + targetId).find('.no-remind').siblings('span').removeClass().addClass("message_statue_unsend");
+              setTimeout(function () {
+                $('#' + appendMsg.messageId).find('.message_statue_position').removeClass().addClass("message_statue_position").addClass("message_statue_unsend");
+              }, 0);
+              conversationServer.updateSendStatus(targetId, targetType, appendMsg.messageId, webimmodel.SentStatus.FAILED);
+
               switch (error.errorCode) {
                 case RongIMLib.ErrorCode.TIMEOUT:
                   //  if(!mainDataServer.isConnected){
@@ -791,11 +879,20 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
             //   }
             // }
             // $('#'+file.id).find('div.up_process > div').css('width', file.percent + "%");
+            if(item && file.percent == 100){
+              $scope.mainData.conversation.updateConStaticBeforeSend(item, true);
+              item.sentStatus = webimmodel.SentStatus.SENDING;
+              $('#' + item.conversationType + '_' + item.targetId).find('.no-remind').siblings('span').removeClass().addClass("message_statue_sending");
+              setTimeout(function () {
+                $('#' + item.messageId).find('.message_statue_position').removeClass().addClass("message_statue_position").addClass("message_statue_sending");
+              }, 0);
+
+            }
             setTimeout(function () {
                 $scope.$apply();
             });
           },
-          onFileUploaded:function( file: any, message: webimmodel.Message){
+          onFileUploaded:function( file: any, message: webimmodel.Message, err: any){
               if (file.uploadType == 'IMAGE') {
                 $scope.uploadStatus.show = false;
                 $scope.uploadStatus.progress = 0;
@@ -813,6 +910,23 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
                     $scope.$emit("conversationChange");
                 }, 200);
               }
+
+              if(err && item){
+                item.sentStatus = webimmodel.SentStatus.FAILED;
+                $('#' + item.conversationType + '_' + item.targetId).find('.no-remind').siblings('span').removeClass().addClass("message_statue_unsend");
+                setTimeout(function () {
+                  $('#' + item.messageId).find('.message_statue_position').removeClass().addClass("message_statue_position").addClass("message_statue_unsend");
+                }, 0);
+                // conversationServer.updateSendMessage(targetId, targetType, _message);
+              }
+              else if(message && item){
+                item.sentStatus = webimmodel.SentStatus.SENT;
+                $('#' + item.conversationType + '_' + item.targetId).find('.no-remind').siblings('span').removeClass();
+                setTimeout(function () {
+                  $('#' + item.messageId).find('.message_statue_position').removeClass().addClass("message_statue_position");
+                }, 0);
+              }
+
               $scope.$apply();
           },
           onError:function( up: any, err: any, errTip: string){

@@ -25,6 +25,7 @@ mainDire.directive("conversation", ["$state", "mainDataServer", function($state:
         '<p class="attr clearfix">' +
         '<span class="badge" ng-if="item.unReadNum>0">{{item.unReadNum>99?"99+":item.unReadNum}}</span>' +
         '<i class="no-remind" ng-show="false"></i>' +
+        '<span></span>' +
         '</p>' +
         '</div>' +
 

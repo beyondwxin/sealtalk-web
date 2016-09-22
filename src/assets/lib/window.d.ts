@@ -65,6 +65,7 @@ interface HTMLAnchorElement{
 }
 interface Element{
   children:any;
+  files: any;
 }
 
 declare var window: Window

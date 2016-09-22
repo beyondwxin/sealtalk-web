@@ -507,6 +507,20 @@ conversationServer.factory("conversationServer", ["$q", "mainDataServer", "mainS
           }
         }
 
+        function updateSendStatus(id: string, type: string, messageid: string, status: webimmodel.SentStatus){
+          var currenthis = conversationServer.historyMessagesCache[type + "_" + id];
+          for(var i = currenthis.length - 1; i > -1; i--){
+            if (currenthis[i].panelType == webimmodel.PanelType.Message
+              && currenthis[i].messageUId == undefined
+              && currenthis[i].messageDirection == webimmodel.MessageDirection.SEND
+              && currenthis[i].messageId == messageid
+            ) {
+                currenthis[i].sentStatus = status;
+                break;
+            }
+          }
+        }
+
         function getMessageById(id: string, type: string, messageuid: string){
           var currenthis = conversationServer.historyMessagesCache[type + "_" + id];
           var keepGoing = true;
@@ -567,6 +581,7 @@ conversationServer.factory("conversationServer", ["$q", "mainDataServer", "mainS
         conversationServer.addWithDrawMessageCache = addWithDrawMessageCache;
         conversationServer.sendReadReceiptMessage = sendReadReceiptMessage;
         conversationServer.sendSyncReadStatusMessage = sendSyncReadStatusMessage;
+        conversationServer.updateSendStatus = updateSendStatus;
 
         return conversationServer;
     }])
@@ -597,4 +612,5 @@ interface conversationServer {
     addWithDrawMessageCache(id: string, type:number, messageuid: string): void
     sendReadReceiptMessage(id: string, type:number, messageuid: string, sendtime: number): void
     sendSyncReadStatusMessage(id: string, type:number, sendtime: number): void
+    updateSendStatus(id: string, type:number, uid: string, status: webimmodel.SentStatus): boolean
 }

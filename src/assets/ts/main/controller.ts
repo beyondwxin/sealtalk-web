@@ -46,6 +46,15 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
 
         })
 
+        function preloadimages(arr: string[]){
+            var newimages:any[]  = [];
+            for (var i=0; i<arr.length; i++){
+                newimages[i]=new Image()
+                newimages[i].src=arr[i]
+            }
+        }
+        preloadimages(['../assets/img/message_state.png ']);
+
         $scope.mainData = <mainDataServer>mainDataServer;
         $scope.$on('refreshSelectCon', function(event: any, data: string) {
           $scope.unSelect(data);
@@ -841,7 +850,16 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
                                     if (!$state.is("main.notification")) {
                                         mainDataServer.notification.hasNewNotification = true;
                                     }
-                                    mainDataServer.contactsList.updateGroupNameById(groupid, groupNotification.data.data.targetGroupName);
+                                    var group = new webimmodel.Group({
+                                        id: groupid,
+                                        name: groupNotification.data.data.targetGroupName,
+                                        imgSrc: undefined,
+                                        upperlimit: undefined,
+                                        fact: undefined,
+                                        creater: mainDataServer.loginUser.id
+                                    });
+
+                                    mainDataServer.contactsList.updateGroupInfoById(groupid, group);
                                     mainDataServer.conversation.updateConversationTitle(webimmodel.conversationType.Group, groupid, groupNotification.data.data.targetGroupName);
                                     break;
                                 case "Create":
