@@ -44,7 +44,7 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
                     method: 'POST',
                     url: 'http://up.qiniu.com?',
                     headers: {
-                      //此处必须设置 undefined 
+                      //此处必须设置 undefined
                       'Content-Type': <any>undefined
                     },
                     transformRequest: angular.identity,
@@ -69,6 +69,9 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         });
         $("#__myPortrait").click(function(e){
            e.preventDefault();
+           if(!$scope.isself){
+               return;
+           }
            $("#__selPortrait").trigger('click');
         });
 
@@ -101,6 +104,7 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
                 // f = mainDataServer.contactsList.addFriend(f);
                 var fold = webimutil.ChineseCharacter.getPortraitChar2(friend.displayName || friend.name);
                 var fnew = webimutil.ChineseCharacter.getPortraitChar2(f.displayName || f.name);
+                f.firstchar = webimutil.ChineseCharacter.getPortraitChar(f.displayName || f.name);;
                 if (fold != fnew) {
                     mainDataServer.contactsList.removeFriendFromSubgroup(friend);
 

@@ -998,6 +998,7 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
                         }
                         break;
                     case webimmodel.MessageType.SyncReadStatusMessage:
+                        conversationServer.clearAtMessage(msg.targetId, msg.conversationType);
                         RongIMSDKServer.clearUnreadCount(msg.conversationType, msg.targetId);
                         var curCon = mainDataServer.conversation.getConversation(msg.conversationType, msg.targetId);
                         if (curCon) {

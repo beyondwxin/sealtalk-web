@@ -392,6 +392,13 @@ conversationServer.factory("conversationServer", ["$q", "mainDataServer", "mainS
           conversationServer.atMessagesCache[type + "_" + id].push(atMsg);
         }
 
+        function clearAtMessage(id: string, type: string){
+          if (!conversationServer.atMessagesCache[type + "_" + id]) {
+              conversationServer.atMessagesCache[type + "_" + id] = [];
+          }
+          conversationServer.atMessagesCache[type + "_" + id].length = 0;
+        }
+
         function addWithDrawMessageCache(id: string, type: string, msgUid: string){
           if (!conversationServer.withDrawMessagesCache[type + "_" + id]) {
               conversationServer.withDrawMessagesCache[type + "_" + id] = [];
@@ -573,6 +580,7 @@ conversationServer.factory("conversationServer", ["$q", "mainDataServer", "mainS
         conversationServer.updateHistoryMessagesCache = updateHistoryMessagesCache;
         conversationServer.checkMessageExist = checkMessageExist;
         conversationServer.addAtMessage = addAtMessage;
+        conversationServer.clearAtMessage = clearAtMessage;
         conversationServer.clearHistoryMessages = clearHistoryMessages;
         conversationServer.getLastMessageTime = getLastMessageTime;
         conversationServer.getMessageById = getMessageById;
@@ -604,6 +612,7 @@ interface conversationServer {
     updateHistoryMessagesCache(id: string, type:number, name: string, portrait: string): void
     checkMessageExist(id: string, type:number, messageuid: string): boolean
     addAtMessage(id: string, type: number, item: webimmodel.Message): void
+    clearAtMessage(id: string, type: number): void
     getMessageById(id: string, type:number, messageuid: string): webimmodel.Message
     clearHistoryMessages(id: string, type: number): void
     getLastMessageTime(id: string, type: number): number

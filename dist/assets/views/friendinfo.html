@@ -16,11 +16,7 @@
     <div class="userInfo">
         <div class="userData clearfix">
             <input type="file" id="__selPortrait" accept="image/*">
-            <div class="photo" id="__myPortrait" ng-show="isself">
-                <img class="img" ng-show="user.portraitUri" ng-src="{{user.portraitUri||'assets/img/barBg.png'}}" alt="">
-                <div id="portrait" ng-show="!user.portraitUri" class="portrait">{{user.firstchar}}</div>
-            </div>
-            <div class="photo" ng-show="!isself">
+            <div class="photo" id="__myPortrait">
                 <img class="img" ng-show="user.portraitUri" ng-src="{{user.portraitUri||'assets/img/barBg.png'}}" alt="">
                 <div id="portrait" ng-show="!user.portraitUri" class="portrait">{{user.firstchar}}</div>
             </div>
