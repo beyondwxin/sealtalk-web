@@ -3496,6 +3496,7 @@ input::-ms-clear{display:none;}
 .groupDataList .line .li{
     float: left;
     padding: 14px 0px;
+    cursor: pointer;
 }
 .groupDataList .line .li .portrait{
     width: 36px;
@@ -3515,11 +3516,12 @@ input::-ms-clear{display:none;}
 .groupDataList .line .li span{
     vertical-align: middle;
     display: inline-block;
-    width: 100px;
+    width: 140px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     margin-left: 10px;
+    margin-right: 10px;
 }
 .groupDataList .line .li.add .portrait{
     background: url(../img/add.png) no-repeat;

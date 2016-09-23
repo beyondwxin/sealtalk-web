@@ -69,7 +69,7 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         });
         $("#__myPortrait").click(function(e){
            e.preventDefault();
-           if(!$scope.isself){
+           if(!$scope.isself || $scope.isself && $scope.conversationtype != 0){
                return;
            }
            $("#__selPortrait").trigger('click');
@@ -89,7 +89,9 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         $scope.isfriend = !!friend;
         $scope.isself = !!isself;
         $scope.user = new webimmodel.UserInfo();
-
+        if ($scope.isself && $scope.conversationtype == 0) {
+          $("#__myPortrait").css('cursor', 'pointer');
+        }
         if (friend) {
             // $scope.user.id = friend.id;
             // $scope.user.nickName = friend.name;
@@ -174,6 +176,10 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
         $scope.edit = function () {
             // $state.go("main.editfriendinfo", { userid: userid, groupid: groupid, targetid: targetid, conversationtype: conversationtype });
             $scope.isEditable = true;
+            setTimeout(function () {
+              $('#editName').focus();
+              // $('#editName').select();
+            }, 0);
         };
         $scope.editSave = function() {
           if($scope.newName == $scope.user.displayName){
@@ -185,6 +191,7 @@ friendinfo.controller("friendinfoController", ["$scope", "$rootScope", "$state",
               mainServer.user.setNickName($scope.newName).success(function() {
                   mainDataServer.loginUser.nickName = $scope.newName;
                   mainDataServer.loginUser.firstchar = webimutil.ChineseCharacter.getPortraitChar($scope.newName);
+                  $scope.user.nickName = $scope.newName;
                   $scope.isEditable = false;
               })
             }else{

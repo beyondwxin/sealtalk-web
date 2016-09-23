@@ -319,7 +319,7 @@ groupInfo.directive("member", ["$state", "mainDataServer", function($state: angu
         // '</div>' +
         // '</div>' +
         // '</li>',
-        template: '<div class="clearfix li" style="display:none">' +
+        template: '<div class="clearfix li" style="display:none" ng-click="showinfo()">' +
             '<img class="portrait img" ng-show="item.imgSrc" ng-src="{{item.imgSrc||\'assets/img/barBg.png\'}}" alt="">' +
             '<div class="portrait" ng-show="!item.imgSrc">{{item.firstchar}}</div>' +
             '<span>{{showName}}</span>' +

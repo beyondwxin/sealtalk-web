@@ -32,16 +32,16 @@
                     <form name="modifyName">
                         <div class="clearfix">
                             <div class="col-xs-4" style="padding: 0px;">
-                                <input type="text" name="userName" class="form-control" id="editName" size="30" required ng-minlength="1" ng-maxlength="32" ng-model="newName">
+                                <input type="text" name="userName" class="form-control" id="editName" size="30" ng-minlength="1" ng-maxlength="32" ng-model="newName">
                             </div>
-                            <span class="error-block groupNaEr" ng-show="modifyName.userName.$dirty && modifyName.userName.$error.required">用户名不能为空</span>
+                            <!-- <span class="error-block groupNaEr" ng-show="modifyName.userName.$dirty && modifyName.userName.$error.required">备注名不能为空</span> -->
                             <span class="error-block groupNaEr" ng-show="modifyName.userName.$dirty && (modifyName.userName.$error.minlength||modifyName.userName.$error.maxlength)">昵称长度1-32</span>
                         </div>
                     </form>
                 </h3>
                 <!-- <p class="userId">ID : <span>{{user.id}}</span></p> -->
                 <!-- <p class="isBlack">已加入黑名单</p> -->
-                <p class="isBlack">昵称：{{user.nickName}}</p>
+                <p class="isBlack" ng-show="!isself">昵称：{{user.nickName}}</p>
                 <p class="person-tel">手机号：{{user.mobile}}</p>
             </div>
         </div>

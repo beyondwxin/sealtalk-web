@@ -40,9 +40,6 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
         $scope.lastSearchStr = '';
         $scope.defaultSearch = false;
 
-
-
-
         function initAtList(){
           if($scope.groupInfo){
             $scope.groupInfo = null;

@@ -7,7 +7,7 @@ userinfo.controller("blacklistController", ["$scope", "$state", "mainDataServer"
     function($scope: any, $state: angular.ui.IStateService, mainDataServer: mainDataServer) {
 
         $scope.back = function() {
-            $state.go("main.userinfo")
+            window.history.back();
         }
 
         $scope.blacklist = mainDataServer.blackList.list;

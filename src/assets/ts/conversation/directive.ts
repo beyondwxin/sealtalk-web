@@ -679,54 +679,155 @@ conversationDire.directive("textMessage", [function() {
     }
 }])
 
+// conversationDire.directive("imageMessage", [function() {
+//     return {
+//         restrict: "E",
+//         scope: { item: "=" },
+//         template: '<div class="" id={{itemid}}>' +
+//         '<div class="Message-img">' +
+//         '<span id="{{\'rebox_\'+$id}}" ng-click="showBigImage()"   class="Message-entry gallery" style="">' +
+//         '<!-- <p>发给您一张示意图</p> -->' +
+//         // '<img ng-src="{{item.content||\'../../static/images/barBg.png\'}}" data-image="{{item.imageUri}}" alt=""/>' +
+//         '<a href="{{item.imageUri||\'assets/img/barBg.png\'}}"><img ng-src="{{item.content||\'../../static/images/barBg.png\'}}"  data-image="{{item.imageUri}}" alt=""/></a>' +
+//         '</span>' +
+//         // '<a href="{{item.imageUri}}" download>下载</a>' +
+//         '</div>' +
+//         '</div>',
+//         link: function(scope: any, ele: angular.IRootElementService, attr: any) {
+//             var img = new Image();
+//             scope.itemid = scope.$parent.item.messageUId;
+//             img.src = scope.item.imageUri;
+//             setTimeout(function() {
+//                 $('#rebox_' + scope.$id).rebox({ selector: 'a' }).bind("rebox:open", function() {
+//                     //jQuery rebox 点击空白关闭
+//                     var rebox = <any>document.getElementsByClassName("rebox")[0];
+//                     rebox.onclick = function(e: any) {
+//                         if (e.target.tagName.toLowerCase() != "img") {
+//                             var rebox_close = <any>document.getElementsByClassName("rebox-close")[0];
+//                             rebox_close.click();
+//                             rebox = null; rebox_close = null;
+//                         }
+//                     }
+//                 });
+//             })
+//
+//
+//
+//             img.onload = function() {
+//                 scope.$apply(function() {
+//                     scope.item.content = scope.item.imageUri
+//                 });
+//             }
+//             scope.showBigImage = function() {
+//
+//             }
+//             $(ele).contextmenu(function(e: any){
+//               console.log('显示右键菜单', e.which, e.currentTarget.firstChild.id, e);
+//               return false;
+//             });
+//         }
+//     }
+// }])
+
 conversationDire.directive("imageMessage", [function() {
-    return {
-        restrict: "E",
-        scope: { item: "=" },
-        template: '<div class="" id={{itemid}}>' +
-        '<div class="Message-img">' +
-        '<span id="{{\'rebox_\'+$id}}" ng-click="showBigImage()"   class="Message-entry gallery" style="">' +
-        '<!-- <p>发给您一张示意图</p> -->' +
-        // '<img ng-src="{{item.content||\'../../static/images/barBg.png\'}}" data-image="{{item.imageUri}}" alt=""/>' +
-        '<a href="{{item.imageUri||\'assets/img/barBg.png\'}}"><img ng-src="{{item.content||\'../../static/images/barBg.png\'}}"  data-image="{{item.imageUri}}" alt=""/></a>' +
-        '</span>' +
-        // '<a href="{{item.imageUri}}" download>下载</a>' +
-        '</div>' +
-        '</div>',
-        link: function(scope: any, ele: angular.IRootElementService, attr: any) {
-            var img = new Image();
-            scope.itemid = scope.$parent.item.messageUId;
-            img.src = scope.item.imageUri;
-            setTimeout(function() {
-                $('#rebox_' + scope.$id).rebox({ selector: 'a' }).bind("rebox:open", function() {
-                    //jQuery rebox 点击空白关闭
-                    var rebox = <any>document.getElementsByClassName("rebox")[0];
-                    rebox.onclick = function(e: any) {
-                        if (e.target.tagName.toLowerCase() != "img") {
-                            var rebox_close = <any>document.getElementsByClassName("rebox-close")[0];
-                            rebox_close.click();
-                            rebox = null; rebox_close = null;
-                        }
-                    }
-                });
-            })
+  return {
+    restrict: "E",
+    scope: { item: "=" },
+    template: '<div class="" id={{itemid}}>' +
+    '<div class="Message-img">' +
+    '<span id="{{\'rebox_\'+$id}}" class="Message-entry gallery" style="max-height:240px;max-width:240px;border-radius:5px;">' +
+    '<a href="{{item.imageUri}}" style="max-height:240px;max-width:240px;display:inline-block;"></a>' +
+    '</span>' +
+    // '<a href="{{item.imageUri}}" download>下载</a>' +
+    '</div>' +
+    '</div>',
+    link: function(scope: any, ele: angular.IRootElementService, attr: any) {
+      var base64img = new Image();
+      base64img.src = scope.item.content;
+      var abox=ele.find('a')[0];
+      base64img.onload = function() {
+        var box = document.getElementById('rebox_' + scope.$id);
+        var pos = getBackgrund(base64img.width, base64img.height);
+        box.style.backgroundImage = 'url(' + scope.item.content + ')';
+        box.style.backgroundSize = pos.w + 'px ' + pos.h + 'px';
+        box.style.backgroundPosition = pos.x + 'px ' + pos.y + 'px';
+        box.style.height = pos.h + 'px';
+        box.style.width = pos.w + 'px';
+        abox.style.height = pos.h + 'px';
+        abox.style.width = pos.w + 'px';
+      }
+      function getBackgrund(width: number, height: number) {
 
-
-
-            img.onload = function() {
-                scope.$apply(function() {
-                    scope.item.content = scope.item.imageUri
-                });
-            }
-            scope.showBigImage = function() {
-
-            }
-            $(ele).contextmenu(function(e: any){
-              console.log('显示右键菜单', e.which, e.currentTarget.firstChild.id, e);
-              return false;
-            });
+        var isheight = width < height;
+        var scale = isheight ? height / width : width / height;
+        var zoom: number, x: number = 0, y: number = 0, w: number, h: number;
+        if (scale > 2.4) {
+          if (isheight) {
+            zoom = width / 100;
+            w = 100;
+            h = height / zoom;
+            y = (h - 240) / 2;
+          } else {
+            zoom = height / 100;
+            h = 100;
+            w = width / zoom;
+            x = (w - 240) / 2;
+          }
+        } else {
+          if (isheight) {
+            zoom = height / 240;
+            h = 240;
+            w = width / zoom;
+          } else {
+            zoom = width / 240;
+            w = 240;
+            h = height / zoom;
+          }
         }
+        return {
+          w: w,
+          h: h,
+          x: -x,
+          y: -y
+        }
+      }
+
+
+
+      var img = new Image();
+      scope.itemid = scope.$parent.item.messageUId;
+      img.src = scope.item.imageUri;
+
+      setTimeout(function(){
+        $('#rebox_' + scope.$id).rebox({ selector: 'a' }).bind("rebox:open", function() {
+          //jQuery rebox 点击空白关闭
+          var rebox = <any>document.getElementsByClassName("rebox")[0];
+          rebox.onclick = function(e: any) {
+            if (e.target.tagName.toLowerCase() != "img") {
+              var rebox_close = <any>document.getElementsByClassName("rebox-close")[0];
+              rebox_close.click();
+              rebox = null; rebox_close = null;
+            }
+          }
+        });
+      })
+
+      img.onload = function() {
+
+        var box = document.getElementById('rebox_' + scope.$id);
+        var pos = getBackgrund(img.width, img.height);
+        box.style.backgroundImage = 'url(' + scope.item.imageUri + ')';
+        box.style.backgroundSize = pos.w + 'px ' + pos.h + 'px';
+        box.style.backgroundPosition = pos.x + 'px ' + pos.y + 'px';
+
+      }
+
+      $(ele).contextmenu(function(e: any) {
+        console.log('显示右键菜单', e.which, e.currentTarget.firstChild.id, e);
+        return false;
+      });
     }
+  }
 }])
 
 conversationDire.directive("bigImage", [function() {

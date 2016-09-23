@@ -19,7 +19,8 @@ modifypassword.controller("modifypasswordController", ["$scope", "$state", "main
         })
 
         $scope.back = function() {
-            $state.go("main.userinfo");
+            // $state.go("main.userinfo");
+            window.history.back();
         }
 
         $scope.save = function() {
