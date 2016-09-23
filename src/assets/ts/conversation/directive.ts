@@ -3,6 +3,19 @@
 
 var conversationDire = angular.module("webim.conversation.directive", ["webim.main.server", "webim.conversation.server"]);
 
+//conversationDire.directive("conversationItem", ["$timeout", function($timeout: angular.ITimeoutService) {
+conversationDire.directive('onFinishRenderFilters', ["$timeout", function($timeout: angular.ITimeoutService) {
+    return {
+        restrict: 'A',
+        link: function (scope: any, element: angular.IRootElementService, attrs: angular.IAttributes) {
+            if (scope.$last === true) {    //判断是否是最后一条数据
+                $timeout(function () {
+                    scope.$emit('ngRepeatFinished'); //向父级scope传送ngRepeatFinished命令
+                });
+            }
+        }
+    };
+}]);
 conversationDire.directive('atshowDire', function () {
     return {
         restrict: 'A',

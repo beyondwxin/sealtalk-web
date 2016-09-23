@@ -497,6 +497,10 @@ mainCtr.controller("mainController", ["$scope", "$state", "$window", "$timeout",
                             //好友请求
                             //添加到通知
                             //TODO:判断是否已经是好友防止离线消息补偿造成错误数据
+                            var friend = mainDataServer.contactsList.getFriendById(contact.sourceUserId);
+                            if(friend){
+                              return;
+                            }
                             if (!$state.is("main.notification")) {
                                 $scope.mainData.notification.hasNewNotification = true;
                             }

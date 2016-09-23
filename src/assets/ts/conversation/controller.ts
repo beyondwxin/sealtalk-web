@@ -295,7 +295,6 @@ conversationCtr.controller("conversationController", ["$scope", "$state", "mainD
             }, 0)
         }
 
-
         var atmsgs = conversationServer.atMessagesCache[targetType + "_" + targetId];
         if (atmsgs && atmsgs.length > 0) {
           var msgid = atmsgs[0].messageUId;
