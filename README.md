@@ -1,8 +1,8 @@
-# 融云 RongCloud Web IM V2.0
+﻿# 融云 RongCloud Web IM V2.0
 
 ## Environment Setup
 
-### 初始化开发工具
+### 初始化开发工具--
 
 ```
 npm install -g typescript@1.6.0beta tsd coffee-script grunt-cli karma-cli
